@@ -1,0 +1,8 @@
+submit text
+add text to q&a
+set the first pdf directly as selected +
+show all the pdf pages
+remove pdf button
+send pdf to backend (settings, urls)
+
+check pdf with the same name

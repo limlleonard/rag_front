@@ -1,0 +1,181 @@
+/* border: 1px solid red; */
+a {
+  font-weight: 500;
+  color: #646cff;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+/* REACT APP WRAPPER */
+#root {
+  width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+
+  padding: 30px;
+  background: aliceblue;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  /* height: 100%; */
+}
+
+h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+
+.ctn-lr {
+  display: grid;
+  grid-template-columns: 48% 48%;
+  gap: 4%;
+}
+
+#ctn-pdf {
+  border: 1px solid grey;
+  height: 100vh;
+  overflow: auto;
+}
+
+#canvas {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* min-height: 100%; */
+  direction: ltr;
+}
+
+.ctn-r {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /*scroll debug*/
+}
+
+.ctn-r>* {
+  margin-bottom: 1em;
+}
+
+.ctn-r>*:last-child {
+  margin-bottom: 0;
+}
+
+#ctn-dragNbutton {
+  display: grid;
+  grid-template-columns: 65% 30%;
+  gap: 5%;
+}
+
+#drop-area {
+  border: 2px dashed #ccc;
+  padding: 1em;
+  text-align: center;
+}
+
+#fileElem {
+  display: none;
+}
+
+/* select {
+	padding-left: 1em;
+} */
+
+#ctn-select {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+#ctn-select label {
+  margin-right: 1em;
+  white-space: nowrap;
+}
+
+#ctn-select-rp {
+  flex-grow: 1;
+  max-width: 100%;
+  position: relative;
+}
+
+#ctn-select-rp::after {
+  content: '...';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1em;
+  background: white;
+  pointer-events: none;
+  display: none;
+  /* Hide by default */
+}
+
+#ctn-select-rp select {
+  width: 100%;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  padding-right: 1em;
+  /* Space for the ellipsis */
+}
+
+#ctn-select-rp select:focus::after {
+  display: none;
+}
+
+.textfield input {
+  width: 100%;
+  height: 1.5em;
+  margin-top: 0.2em;
+}
+
+#ctn-qas1 {
+  /* height: 70vh; */
+  display: flex;
+  flex-direction: column;
+  /* Stack items vertically inside this container */
+  flex-grow: 1;
+  /* Allow this container to grow and take remaining space */
+  overflow-y: auto;
+  /* overflow-y: scroll; */
+}
+
+/* justify-content: flex-end; */
+
+#ctn-qas1>*:first-child {
+  margin-top: auto;
+}
+
+.question,
+.answer {
+  margin-bottom: 1em;
+  padding: 0.3em;
+  border: 1px solid grey;
+  border-radius: 1em;
+  background-color: ghostwhite;
+  width: 90%;
+  text-align: left;
+}
+
+.question {
+  align-self: flex-end;
+  /* Align the question to the right */
+}
