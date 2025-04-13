@@ -22,3 +22,14 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 	padding: 25px;
 }
+
+#root {
+	margin: 0 auto;
+	text-align: center;
+	padding: 30px;
+	background: aliceblue;
+	border-radius: 10px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: column;
+}

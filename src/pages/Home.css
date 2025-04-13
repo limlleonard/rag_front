@@ -15,20 +15,17 @@ button {
   transition: border-color 0.25s;
 }
 
-/* REACT APP WRAPPER */
-#root {
+/* #root {
   width: 1280px;
   margin: 0 auto;
   text-align: center;
-
   padding: 30px;
   background: aliceblue;
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  /* height: 100%; */
-}
+} */
 
 h2 {
   text-align: center;
@@ -37,6 +34,7 @@ h2 {
 }
 
 .ctn-lr {
+  width: 1280px;
   display: grid;
   grid-template-columns: 48% 48%;
   gap: 4%;
