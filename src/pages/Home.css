@@ -1,4 +1,20 @@
 /* border: 1px solid red; */
+.btn-top {
+  z-index: 1;
+  width: 100px;
+  position: absolute;
+  top: 20px;
+  right: 30px;
+}
+
+#btn-test {
+  z-index: 1;
+  width: 100px;
+  position: absolute;
+  top: 20px;
+  right: 130px;
+}
+
 a {
   font-weight: 500;
   color: #646cff;

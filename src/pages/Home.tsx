@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import "./Home.css";
+import { PageViewport } from "pdfjs-dist"; //
+import type { TextContent } from "pdfjs-dist/types/src/display/api";
 import * as pdfjsLib from "pdfjs-dist";
 import "pdfjs-dist/build/pdf.worker.mjs";
+// import { useAuth } from "./AuthContext";
+
 let url0 = "";
 if (window.location.protocol === "http:") {
     url0 = "http://127.0.0.1:8000/";
@@ -14,6 +18,13 @@ if (window.location.protocol === "http:") {
 //     );
 //     return match ? decodeURIComponent(match[2]) : null;
 // }
+interface QAResponse {
+    file_name: string;
+    page_nr: number;
+    text: string;
+    score: number;
+}
+
 function Home() {
     const [input, setInput] = useState<string>("");
     const [qa, setQA] = useState<string[]>([
@@ -24,11 +35,81 @@ function Home() {
     ]);
     const [files, setFiles] = useState<File[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [textChunk, setTextChunk] = useState("");
     const [apiValid, setApiValid] = useState<Boolean>(false);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const ctnRef = useRef<HTMLDivElement | null>(null);
+    // const { logout } = useAuth();
 
+    const logout = () => {
+        sessionStorage.clear();
+        window.location.href = "/login";
+    };
+    const uploadpdf = async (newFiles: File[]) => {
+        try {
+            const formData = new FormData();
+            newFiles.forEach((file) => {
+                formData.append("files", file);
+            });
+            const response = await fetch(`${url0}addpdf/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${sessionStorage.getItem("access")}`,
+                },
+                body: formData,
+            });
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+            }
+        } catch (err) {
+            console.error("Error uploading files:", err);
+            alert("File upload failed. Check console for details.");
+        }
+    };
+    const getpdf = async () => {
+        const res = await fetch(`${url0}getpdf/`, {
+            headers: {
+                Authorization: `Bearer ${sessionStorage.getItem("access")}`,
+            },
+        });
+        const fileList = await res.json(); // [{ name, url }]
+        const filePromises = fileList.map(
+            async (file: { name: string; url: string }) => {
+                const res = await fetch(file.url);
+                const blob = await res.blob();
+                return new File([blob], file.name, { type: blob.type });
+            }
+        );
+        const pdfFiles = await Promise.all(filePromises);
+        if (pdfFiles) {
+            setSelectedFile(pdfFiles[0]);
+            setFiles(pdfFiles);
+        }
+    };
+    const removepdf = async () => {
+        if (ctnRef.current) {
+            ctnRef.current.innerHTML = ""; // Clear canvas manually
+        }
+        setFiles([]);
+        setSelectedFile(null);
+        try {
+            const response = await fetch(`${url0}removepdf/`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${sessionStorage.getItem("access")}`,
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`Delete failed: ${response.statusText}`);
+            }
+            console.log("Files deleted successfully");
+        } catch (err) {
+            console.error("Error deleting files:", err);
+            alert("File delete failed.");
+        }
+    };
     const handleInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
         const filesArray = Array.from(e.target.files);
@@ -43,31 +124,7 @@ function Home() {
         if (!selectedFile && pdfFiles) {
             setSelectedFile(pdfFiles[0]);
         }
-
-        try {
-            const formData = new FormData();
-            newFiles.forEach((file) => {
-                formData.append("files", file);
-            });
-            const token = sessionStorage.getItem("access");
-            console.log("Token:", token);
-            const response = await fetch(`${url0}addpdf/`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                throw new Error(`Upload failed: ${response.statusText}`);
-            }
-
-            console.log("Files uploaded successfully");
-        } catch (err) {
-            console.error("Error uploading files:", err);
-            alert("File upload failed. Check console for details.");
-        }
+        uploadpdf(newFiles);
     };
     const handleClick = () => {
         fileInputRef.current?.click();
@@ -90,10 +147,6 @@ function Home() {
     };
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault(); // Necessary to allow drop
-    };
-    const remove = async () => {
-        setFiles([]);
-        setSelectedFile(null);
     };
     const addAPI = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -129,25 +182,61 @@ function Home() {
 
     const ask = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!input) {
+            alert("Die Frage darf nicht leer sein.");
+            return;
+        }
         setQA((prevQA) => [...prevQA, input]);
         setInput("");
         try {
             const response = await fetch(`${url0}ask/?question=${input}`, {
                 method: "GET",
+                headers: {
+                    Authorization: `Bearer ${sessionStorage.getItem("access")}`,
+                },
             });
             if (!response.ok) {
-                setQA((prevQA) => [...prevQA, "response not ok"]);
-                throw new Error(`Error ask: ${response.status}`);
+                if (response.status === 401) {
+                    alert("Login expired. Please logout and login again.");
+                } else {
+                    throw new Error(`Error ask: ${response.status}`);
+                }
             }
-            const data = await response.json();
-            if ("answer" in data) {
-                setQA((prevQA) => [...prevQA, data.answer]);
-            } else {
-                setQA((prevQA) => [...prevQA, "got no answer"]);
+            const data: QAResponse = await response.json();
+            // change select pdf, scroll to page
+            setQA((prevQA) => [
+                ...prevQA,
+                `File: ${data.file_name}, Page Number: ${
+                    data.page_nr
+                }, Context: ${data.text}, (Confidence: ${
+                    Math.round(data.score * 100) / 100
+                })`,
+            ]);
+            const file = files.find((f) => f.name === data.file_name);
+            if (file) {
+                setSelectedFile(file);
+                setCurrentPage(data.page_nr);
+                setTextChunk(data.text);
             }
         } catch (err) {
             setQA((prevQA) => [...prevQA, "ask error"]);
             console.error("Ask failed:", err);
+        }
+    };
+
+    const test1 = async () => {
+        try {
+            const response = await fetch(`${url0}test1/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${sessionStorage.getItem("access")}`,
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`Delete failed: ${response.statusText}`);
+            }
+        } catch (err) {
+            console.error("Error test:", err);
         }
     };
     useEffect(() => {
@@ -163,25 +252,30 @@ function Home() {
                 const canvas = document.createElement("canvas");
                 const context = canvas.getContext("2d");
                 const viewport = page.getViewport({ scale: 1 });
-
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
-
                 await page.render({ canvasContext: context!, viewport })
                     .promise;
                 ctnRef.current.appendChild(canvas);
+                if (i === currentPage) {
+                    canvas.scrollIntoView();
+                }
             }
         };
 
         renderPdf();
-    }, [selectedFile]);
-    // useEffect(() => {
-    //     fetch(`${url0}csrf/`, {
-    //         credentials: "include",
-    //     });
-    // }, []);
+    }, [selectedFile, currentPage, textChunk]);
+    useEffect(() => {
+        getpdf();
+    }, []);
     return (
         <>
+            <button type="button" className="btn-top" onClick={logout}>
+                Logout
+            </button>
+            <button type="button" id="btn-test" onClick={test1}>
+                test1
+            </button>
             <h2>Ragger</h2>
             <div className="ctn-lr">
                 <div className="ctn-l">
@@ -212,7 +306,7 @@ function Home() {
                                 style={{ display: "none" }}
                             />
                         </div>
-                        <button type="button" onClick={remove}>
+                        <button type="button" onClick={removepdf}>
                             PDF Löschen
                         </button>
                     </div>

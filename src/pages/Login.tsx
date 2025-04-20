@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import "./Login.css";
+// import { useAuth } from "./AuthContext";
+
 let url0 = "";
 if (window.location.protocol === "http:") {
     url0 = "http://127.0.0.1:8000/";
@@ -12,37 +14,45 @@ if (window.location.protocol === "http:") {
 export default function AuthPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
+    // const { login } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        const res = await fetch(`${url0}/api/token/`, {
+        if (!username || !password) {
+            alert("Username or password cannot be empty");
+            return;
+        }
+        const res = await fetch(`${url0}login/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
         });
-
         if (res.ok) {
             const data = await res.json();
             sessionStorage.setItem("access", data.access);
             sessionStorage.setItem("refresh", data.refresh);
-            navigate("/"); // go to main app
+            window.location.href = "/";
         } else {
             alert("Login failed");
         }
     };
 
     const handleRegister = async () => {
+        if (!username || !password) {
+            alert("Username or password cannot be empty");
+            return;
+        }
         const res = await fetch(`${url0}register/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
         });
-
+        console.log(res);
         if (res.ok) {
             alert("User registered. You can now log in.");
         } else {
-            alert("Register failed.");
+            alert("Username existed. Please choose another name.");
         }
     };
 

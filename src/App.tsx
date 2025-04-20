@@ -6,11 +6,13 @@ import {
 } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+// import { AuthProvider } from "./pages/AuthContext";
 
 const isAuthenticated = () => !!sessionStorage.getItem("access");
 
 export default function App() {
     return (
+        // <AuthProvider>
         <Router>
             <Routes>
                 <Route
@@ -22,5 +24,6 @@ export default function App() {
                 <Route path="/login" element={<Login />} />
             </Routes>
         </Router>
+        // </AuthProvider>
     );
 }

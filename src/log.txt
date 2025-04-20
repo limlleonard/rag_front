@@ -4,5 +4,13 @@ set the first pdf directly as selected +
 show all the pdf pages
 remove pdf button
 send pdf to backend (settings, urls)
+connection with token login instead of cookie
+logout
+login will refresh instead of redirect
+delete backend pdf when delete frontend
+add pdf to front from history of backend
 
-check pdf with the same name
+connect llm model
+
+direct to login if notice token expires
+DB for pdf name, vector, persist with file and save in the same folder
